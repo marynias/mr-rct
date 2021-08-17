@@ -1,0 +1,62 @@
+---
+title: "ClinGov Trials Data Explorer"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r global-options}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, cache=TRUE, cache.lazy = FALSE)
+```
+
+```{r}
+library("dplyr")
+library("DataExplorer")
+library("ggplot2")
+source("clingov_functions.R")
+```
+#Primary outcomes only
+### Load data
+```{r}
+data <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+#data <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+```
+### Introduce
+```{r}
+introduce(data)
+```
+### Plot Intro
+```{r}
+plot_intro(data)
+```
+### Plot missing
+```{r}
+plot_missing(data)
+```
+### Number of studies
+```{r}
+length(unique(data$nct_id))
+```
+
+### Plot barplot
+```{r}
+plot_bar(data)
+```
+### Plot histogram
+```{r}
+plot_histogram(data)
+```
+
+### Count number of primary and secondary outcomes by study
+```{r}
+outcome <- read.delim("outcome_add.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+outcome_primary <- outcome[outcome$outcome_type == "Primary",]
+outcome_secondary <- outcome[outcome$outcome_type == "Secondary",]
+primary_counts <- outcome_primary %>% count(nct_id)
+secondary_counts <- outcome_secondary %>% count(nct_id)
+
+ggplot(primary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_continuous(limits = c(0, 20)) + theme_Publication() + ggtitle("Number of primary outcomes per study")
+
+ggplot(secondary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_continuous(limits = c(0, 40)) + theme_Publication() + ggtitle("Number of secondary outcomes per study")
+
+```

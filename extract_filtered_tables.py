@@ -115,6 +115,16 @@ results = results[to_keep]
 results = results.loc[results['number_of_arms'] > 1]
 results.to_csv("studies.txt", sep="\t", index=False)
 
+#MESH terms - interventions
+sql = """select * from browse_interventions"""
+results = run_query(conn,sql)
+results.to_csv("mesh-interventions.txt", sep="\t", index=False)
+
+#MESH terms - conditions
+sql = """select * from browse_conditions"""
+results = run_query(conn,sql)
+results.to_csv("mesh-conditions.txt", sep="\t", index=False)
+
 
 #RESULT_GROUPS
 sql = """select nct_id, id, result_type, title, description from result_groups"""

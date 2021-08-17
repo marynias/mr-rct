@@ -18,6 +18,12 @@ result_g <- read.delim("result_groups.txt", header=T, stringsAsFactors=F, row.na
 studies <- read.delim("studies.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 study_ref <- read.delim("study_references.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 
+mesh_cond <- read.delim("mesh-conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+mesh_interv <- read.delim("mesh-interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+#Create tables with all mesh terms (condition and intervention) associated with a given study id.
+mesh_cond_all <- mesh_cond %>% dplyr::select(nct_id, downcase_mesh_term) %>% group_by(nct_id) %>% mutate(mesh_cond= paste0(downcase_mesh_term, collapse = "|")) %>% dplyr::select(nct_id, mesh_cond) %>% distinct()
+mesh_interv_all <- mesh_interv %>% dplyr::select(nct_id, downcase_mesh_term) %>% group_by(nct_id) %>% mutate(mesh_interv= paste0(downcase_mesh_term, collapse = "|")) %>% dplyr::select(nct_id, mesh_interv) %>% distinct()
+
 #Clean data
 clean_data <- function(x) {
 	x <- gsub("\n", "", x)
@@ -59,8 +65,19 @@ required_res5 <- merge(required_res4, all_interv_types, by="nct_id")
 required_res6 <- merge(required_res5, elig[c("nct_id", "gender", "criteria")], by="nct_id")
 #Rows: 94,152
 required_res7 <- merge(required_res6, studies[c("nct_id", "brief_title", "study_type", "overall_status", "phase", "number_of_arms", "enrollment")], by="nct_id")
-required_res7 <- required_res7 %>% dplyr::select(nct_id, outcome_id, all_interv, all_interv_types, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
-write.table(required_res7, "clingov_required.tsv", sep="\t", quote=F, row.names=F)
+#Rows: 94,152
+required_res8 <- merge(required_res7, mesh_cond_all, by="nct_id", all.x=T)
+#Rows: 94,152
+required_res9 <- merge(required_res8, mesh_interv_all, by="nct_id", all.x=T)
+#Rows: 94,114
+required_res10 <- merge(required_res9, outcomes[c("nct_id", "outcome_id", "outcome.title")], by=c("nct_id", "outcome_id"))
+required_res10 <- required_res10 %>% dplyr::select(nct_id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
+write.table(required_res10, "clingov_required.tsv", sep="\t", quote=F, row.names=F)
+
+#Filtered down to only primary outcomes.
+primary_outcomes <- outcomes[outcomes$outcome_type == "Primary",]
+required_res11 <- required_res10[required_res10$outcome_id %in% primary_outcomes$outcome_id,]
+write.table(required_res11, "clingov_required_primary.tsv", sep="\t", quote=F, row.names=F)
 
 #Table with additional data.
 #Rows: 7,478
