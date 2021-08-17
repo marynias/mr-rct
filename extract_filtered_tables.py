@@ -46,6 +46,14 @@ results = remove_empty(results, ["names"])
 results.to_csv("all_interventions.txt", sep="\t", index=False)
 
 
+####ALL INTERVENTIONS_TYPES
+sql = """select * from all_intervention_types"""
+results = run_query(conn,sql)
+#Remove empty entries on key columns
+results = remove_empty(results, ["names"])
+#Save to file.
+results.to_csv("all_intervention_types.txt", sep="\t", index=False)
+
 ###DESIGNS
 sql = """select nct_id, intervention_model, primary_purpose, allocation from designs"""
 results = run_query(conn,sql)
@@ -89,7 +97,7 @@ results = remove_empty(results, ["outcome_id", "param_type", "param_value", "p_v
 results.to_csv("outcome_analyses.txt", sep="\t", index=False)
 
 ###OUTCOMES
-sql = """select nct_id, outcome_type, title, description, time_frame, population, units from outcomes"""
+sql = """select nct_id, id, outcome_type, title, description, time_frame, population, units from outcomes"""
 results = run_query(conn,sql)
 results.to_csv("outcomes.txt", sep="\t", index=False)
 
@@ -109,6 +117,6 @@ results.to_csv("studies.txt", sep="\t", index=False)
 
 
 #RESULT_GROUPS
-sql = """select nct_id, result_type, title, description from result_groups"""
+sql = """select nct_id, id, result_type, title, description from result_groups"""
 results = run_query(conn,sql)
 results.to_csv("result_groups.txt", sep="\t", index=False)
