@@ -15,7 +15,7 @@ library("DataExplorer")
 library("ggplot2")
 source("clingov_functions.R")
 ```
-#Primary outcomes only
+# Primary outcomes only
 ### Load data
 ```{r}
 data <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
@@ -59,4 +59,26 @@ ggplot(primary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_conti
 
 ggplot(secondary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_continuous(limits = c(0, 40)) + theme_Publication() + ggtitle("Number of secondary outcomes per study")
 
+```
+### What are the top types of methods among our studies?
+```{r}
+data %>% count(method) %>% arrange(desc(n))
+```
+### What are the top types of estimates among our studies?
+```{r}
+data %>% count(param_type) %>% arrange(desc(n))
+```
+
+### Evaluate frequency of different intervention types
+```{r}
+for_interv <- data %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
+interv_types <- c("Drug", "Other", "Biological", "Behavioral", "Device", "Procedure", "Dietary Supplement", "Radiation", "Diagnostic Test", "Genetic", "Combination Product")
+for (i in interv_types) {
+  print(i)
+  temp <- dim(for_interv[grepl(i, for_interv$all_interv_types),])[1]
+  print(temp)
+}
+```
+
+```{r}
 ```

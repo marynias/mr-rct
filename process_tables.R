@@ -43,6 +43,7 @@ colnames(cond) <- c("nct_id", "condition.name")
 colnames(design_g) <- c("nct_id", "group_type", "design_group.title", "design_group.description")
 colnames(result_g) <- c("nct_id", "group_type", "result_group.title", "result_group.description")
 colnames(outcomes) <- c("nct_id", "outcome_id", "outcome_type", "outcome.title", "outcome.description", "outcome.time_frame", "outcome.population", "outcome.units")
+colnames(outcome_analyses)[1] <- "outcome_analyses.id"
 
 interv$intervention.description <- clean_data(interv$intervention.description)
 outcomes$outcome.description <- clean_data(outcomes$outcome.description)
@@ -52,7 +53,7 @@ result_g$result_group.description <- clean_data(result_g$result_group.descriptio
 
 #Table with required data
 #Rows: 105,790
-required_res <- merge(outcome_analyses[c("nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], brief_sum, by="nct_id")
+required_res <- merge(outcome_analyses[c( "outcome_analyses.id", "nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], brief_sum, by="nct_id")
 #Rows: 105,790
 required_res2 <- merge(required_res, all_cond, by="nct_id")
 #Rows: 105,790
@@ -71,7 +72,7 @@ required_res8 <- merge(required_res7, mesh_cond_all, by="nct_id", all.x=T)
 required_res9 <- merge(required_res8, mesh_interv_all, by="nct_id", all.x=T)
 #Rows: 94,114
 required_res10 <- merge(required_res9, outcomes[c("nct_id", "outcome_id", "outcome.title")], by=c("nct_id", "outcome_id"))
-required_res10 <- required_res10 %>% dplyr::select(nct_id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
+required_res10 <- required_res10 %>% dplyr::select(nct_id, outcome_analyses.id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
 write.table(required_res10, "clingov_required.tsv", sep="\t", quote=F, row.names=F)
 
 #Filtered down to only primary outcomes.
@@ -99,7 +100,7 @@ write.table(addit_res3, "study_ref_add.tsv", sep="\t", quote=F, row.names=F)
 addit_res4 <- merge(all_studies, interv[c("nct_id", "intervention.description")], by="nct_id", all.x=T)
 write.table(addit_res4, "interv_add.tsv", sep="\t", quote=F, row.names=F)
 
-outcome_analyses_slim <- outcome_analyses %>% dplyr::select(nct_id, groups_description, method_description, estimate_description) %>% distinct()
+outcome_analyses_slim <- outcome_analyses %>% dplyr::select(outcome_analyses.id, outcome_id, nct_id, non_inferiority_type, non_inferiority_description, ci_n_sides, p_value_modifier, p_value_description, groups_description, method_description, estimate_description, other_analysis_description) %>% distinct()
 #Rows: 37,419
 addit_res5 <- merge(all_studies, outcome_analyses_slim, by="nct_id", all.x=T)
 write.table(addit_res5, "outcome_analyses_add.tsv", sep="\t", quote=F, row.names=F)
@@ -111,4 +112,36 @@ write.table(addit_res6, "outcome_add.tsv", sep="\t", quote=F, row.names=F)
 addit_res7 <- merge(all_studies, studies[c("nct_id", "baseline_population", "official_title", "limitations_and_caveats")], by="nct_id", all.x=T)
 write.table(addit_res7, "studies_add.tsv", sep="\t", quote=F, row.names=F)
 
+##Find studies which do not have outcome analyses in the db but are interventional and have been published in a journal. Extract details about the publication.
+"%ni%" <- Negate("%in%")
+filtered_ref <- study_ref[study_ref$reference_type %in% c("result"),]
+filtered_ref <- filtered_ref[filtered_ref$nct_id %ni% required_res10$nct_id,]
+
+#All published pmid Ids in one row.
+#24,098 studies linked to a PMID results publication which do not have results stored in ClinGov database
+filtered_ref_lined <- filtered_ref %>% dplyr::select(nct_id, pmid, citation) %>% group_by(nct_id) %>% mutate(all_pmids= paste0(pmid, collapse = "|")) %>% mutate(all_cit= paste0(citation, collapse = "|")) %>% dplyr::select(nct_id, all_pmids, all_cit) %>% distinct()
+
+#Fetch data about studies in this category
+merged_published1 <- merge(filtered_ref_lined, brief_sum, by="nct_id", all.x=T)
+#Rows: 105,790
+merged_published2 <- merge(outcome_analyses[c( "outcome_analyses.id", "nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], merged_published1, by="nct_id", all.y=T)
+#Rows: 105,790
+merged_published3 <- merge(merged_published2, all_cond, by="nct_id", all.x=T)
+
+merged_published4 <- merge(merged_published3, all_interv, by="nct_id", all.x=T)
+#Rows: 94,704
+merged_published5 <- merge(merged_published4, design, by="nct_id", all.x=T)
+#Rows: 94,704
+merged_published6 <- merge(merged_published5, all_interv_types, by="nct_id", all.x=T)
+#Rows: 94,704
+merged_published7 <- merge(merged_published6, elig[c("nct_id", "gender", "criteria")], by="nct_id", all.x=T)
+#Rows: 94,152
+merged_published8 <- merge(merged_published7, studies[c("nct_id", "brief_title", "study_type", "overall_status", "phase", "number_of_arms", "enrollment")], by="nct_id", all.x=T)
+merged_published9 <- merge(merged_published8, mesh_cond_all, by="nct_id", all.x=T)
+#Rows: 94,152
+merged_published10 <- merge(merged_published9, mesh_interv_all, by="nct_id", all.x=T)
+#Rows: 94,114
+merged_published10 <- merge(merged_published10, outcomes[c("nct_id", "outcome_id", "outcome.title")], by=c("nct_id", "outcome_id"), all.x=T)
+merged_published10 <- merged_published10 %>% dplyr::select(nct_id, outcome_analyses.id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, all_cit, all_pmids, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
+write.table(merged_published10, "clingov_noresult.tsv", sep="\t", quote=F, row.names=F)
 
