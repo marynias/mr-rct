@@ -4,7 +4,7 @@ library("ggplot2")
 source("clingov_functions.R")
 
 #Primary outcomes only
-data <- read.delim("clingov_data_all_primary.csv", header=T, stringsAsFactors=F, row.names=NULL, sep=",")
+data <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 glimpse(data)
 #All outcomes
 #all_req_data <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
@@ -16,6 +16,14 @@ plot_intro(data)
 plot_missing(data)
 plot_bar(data)
 plot_histogram(data)
+
+#How many unique studies in the required info data set?
+length(unique(data$nct_id))
+#4,398
+
+#How many unique studies in published?
+length(unique(published$nct_id))
+#11,613
 
 #Outcomes table
 outcome <- read.delim("outcome_add.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
@@ -45,8 +53,90 @@ for (i in interv_types) {
 for_interv2 <- published %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
 for (i in interv_types) {
   print(i)
-  temp <- dim(for_interv[grepl(i, for_interv2$all_interv_types),])[1]
+  temp <- dim(for_interv2[grepl(i, for_interv2$all_interv_types),])[1]
   print(temp)
 }
 
 
+number_nas <- function(x,y,z) {
+	my_studies <- y[grepl(x, y$all_interv_types),]$nct_id
+	rel <- z %>% select(nct_id, mesh_interv) %>% distinct() %>% filter(nct_id %in% my_studies)
+	counts <- rel %>% count(mesh_interv) %>% arrange(desc(n))
+	return(counts)
+}
+
+#For how many of the studies with Drug intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas("Drug", for_interv, data)
+head(out)
+# 682 NAs out of 3,514
+#No-Results
+out <- number_nas("Drug", for_interv2, published)
+head(out)
+# 808 Nas out of 5,190
+
+#For how many of the studies with Behavioral intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas("Behavioral", for_interv, data)
+head(out)
+#272 out of 313
+
+#No-Results
+out <- number_nas("Behavioral", for_interv2, published)
+head(out)
+#1,178 out of 1,278
+
+#For how many of the studies with Dietary Supplement intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas("Dietary Supplement", for_interv, data)
+head(out)
+#16 out of 43 studies
+#No-Results
+out <- number_nas("Dietary Supplement", for_interv2, published)
+head(out)
+#188 out of 306 studies
+
+
+number_nas_cond <- function(x,y,z) {
+	my_studies <- y[grepl(x, y$all_interv_types),]$nct_id
+	rel <- z %>% select(nct_id, mesh_cond) %>% distinct() %>% filter(nct_id %in% my_studies)
+	counts <- rel %>% count(mesh_cond) %>% arrange(desc(n))
+	return(counts)
+}
+
+#For how many of the studies with Drug intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas_cond("Drug", for_interv, data)
+head(out)
+# 238 NAs out of 3,514
+#No-Results
+out <- number_nas_cond("Drug", for_interv2, published)
+head(out)
+# 463 Nas out of 5,190
+
+#For how many of the studies with Behavioral intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas_cond("Behavioral", for_interv, data)
+head(out)
+#59 out of 313
+
+#No-Results
+out <- number_nas_cond("Behavioral", for_interv2, published)
+head(out)
+#254 out of 1,278
+
+#For how many of the studies with Dietary Supplement intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+#Results
+out <- number_nas_cond("Dietary Supplement", for_interv, data)
+head(out)
+#2 out of 43 studies
+#No-Results
+out <- number_nas_cond("Dietary Supplement", for_interv2, published)
+head(out)
+#40 out of 306 studies

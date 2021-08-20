@@ -21,6 +21,17 @@ source("clingov_functions.R")
 data <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 #data <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 ```
+
+#How many unique studies in the required info data set?
+```{r}
+length(unique(published$nct_id))
+```
+
+#How many unique studies in the published data set?
+```{r}
+length(unique(data$nct_id))
+```
+
 ### Introduce
 ```{r}
 introduce(data)
@@ -69,7 +80,7 @@ data %>% count(method) %>% arrange(desc(n))
 data %>% count(param_type) %>% arrange(desc(n))
 ```
 
-### Evaluate frequency of different intervention types
+### Evaluate frequency of different intervention types in "required info" studies
 ```{r}
 for_interv <- data %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
 interv_types <- c("Drug", "Other", "Biological", "Behavioral", "Device", "Procedure", "Dietary Supplement", "Radiation", "Diagnostic Test", "Genetic", "Combination Product")
@@ -79,6 +90,13 @@ for (i in interv_types) {
   print(temp)
 }
 ```
-
+### Evaluate frequency of different intervention types in "published" studies
 ```{r}
+for_interv2 <- published %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
+for (i in interv_types) {
+  print(i)
+  temp <- dim(for_interv2[grepl(i, for_interv2$all_interv_types),])[1]
+  print(temp)
+}
+
 ```

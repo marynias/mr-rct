@@ -107,6 +107,7 @@ results = run_query(conn,sql)
 results.to_csv("study_references.txt", sep="\t", index=False)
 
 ###STUDIES
+###Total number of studies found: 206,079
 sql = """select nct_id, brief_title, study_type, baseline_population, official_title, overall_status, phase, number_of_arms, limitations_and_caveats, enrollment from studies"""
 results = run_query(conn,sql)
 results = remove_empty(results, ["brief_title", "study_type", "overall_status", "number_of_arms", "enrollment"])
