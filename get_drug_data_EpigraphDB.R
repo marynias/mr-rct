@@ -39,14 +39,14 @@ results2 <- query_epigraphdb(
 
 
 #Load data from DGIDb.
-dgidb <- read.delim("dgidb_interactions.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+dgidb <- read.delim("dgidb_interactions.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 #Convert drug names to uppercase
 dgidb$drug_name <- toupper(dgidb$drug_name)
 dgidb$drug_claim_primary_name <- toupper(dgidb$drug_claim_primary_name)
 dgidb$drug_claim_name <- toupper(dgidb$drug_claim_name)
 
 #Load in data from Clinical trials.
-clingov <- read.delim("clingov_required_primary.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+clingov <- read.delim("clingov_required_primary.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 #Find only studies with drugs as intervention.
 drugs_clingov <- clingov[grepl("Drug", clingov$all_interv_types),]
 
@@ -54,10 +54,10 @@ drugs_clingov2 <- drugs_clingov %>% mutate(drug = strsplit(mesh_interv, "\\|")) 
 drugs_clingov2$drug <- toupper(drugs_clingov2$drug)
 
 #Load data from Zheng et al. STable 7: MR evidence supported by coloc.
-table7 <- read.delim("Zheng2020_ST7.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+table7 <- read.delim("Zheng2020_ST7.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 
 #Load data from Zheng et al. STable 8: MR evidence not supported by coloc.
-table8 <- read.delim("Zheng2020_ST8.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+table8 <- read.delim("Zheng2020_ST8.tsv", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 
 #Map ClinGov drugs to genes via OT
 clingov_vs_ot <- merge(drugs_clingov2, results, by.x="drug", by.y="d1.label")
@@ -102,10 +102,10 @@ clingov_vs_dgidb_st8_slim <- clingov_vs_dgidb_st8 %>% select(drug, all_cond, gen
 write.table(clingov_vs_dgidb_st8_slim, "clingov_vs_dgidb_st8_slim.tsv", sep="\t", quote=F, row.names=F)
 
 #Read in a file with matching conditions and genes from ClinGov trials for ST7 from Zheng et al. 2020
-st7_matches <- read.delim("ST7_selected.txt", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+st7_matches <- read.delim("ST7_selected.txt", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 
 #Read in a file with matching conditions and genes from ClinGov trials for ST8 from Zheng et al. 2020
-st8_matches <- read.delim("ST8_selected.txt", sep="\t", header=T, stringsAsFactors=F, row.names=NULL)
+st8_matches <- read.delim("ST8_selected.txt", sep="\t", header=T, stringsAsFactors=F, row.names=NULL, quote="")
 
 #Filter ST7 to the matching targets
 table7_filt <- merge(table7, st7_matches, by.x="Exposure", by.y="target")

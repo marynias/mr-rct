@@ -18,20 +18,10 @@ source("clingov_functions.R")
 # Primary outcomes only
 ### Load data
 ```{r}
-data <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
-#data <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+data_in <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+data <- data_in %>% dplyr::select(nct_id, all_interv_types, intervention_model, study_type, primary_purpose, allocation, overall_status, gender, phase, number_of_arms) %>% distinct()
+data_results <- data_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
 ```
-
-#How many unique studies in the required info data set?
-```{r}
-length(unique(published$nct_id))
-```
-
-#How many unique studies in the published data set?
-```{r}
-length(unique(data$nct_id))
-```
-
 ### Introduce
 ```{r}
 introduce(data)
@@ -60,7 +50,7 @@ plot_histogram(data)
 
 ### Count number of primary and secondary outcomes by study
 ```{r}
-outcome <- read.delim("outcome_add.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+outcome <- read.delim("outcome_add.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 outcome_primary <- outcome[outcome$outcome_type == "Primary",]
 outcome_secondary <- outcome[outcome$outcome_type == "Secondary",]
 primary_counts <- outcome_primary %>% count(nct_id)
@@ -71,18 +61,23 @@ ggplot(primary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_conti
 ggplot(secondary_counts, aes(n)) + geom_histogram(fill='darkblue') + scale_x_continuous(limits = c(0, 40)) + theme_Publication() + ggtitle("Number of secondary outcomes per study")
 
 ```
+### What is the distribution of log p-values?
+```{r}
+ggplot(data_results, aes(p_value)) + geom_histogram(fill='darkblue') + scale_x_continuous(limits = c(0, 1)) + scale_y_continuous(limits = c(0, 1800))+ theme_Publication() + ggtitle("P-value distribution")
+```
+
 ### What are the top types of methods among our studies?
 ```{r}
-data %>% count(method) %>% arrange(desc(n))
+data_results %>% count(method) %>% arrange(desc(n))
 ```
 ### What are the top types of estimates among our studies?
 ```{r}
-data %>% count(param_type) %>% arrange(desc(n))
+data_results %>% count(param_type) %>% arrange(desc(n))
 ```
 
-### Evaluate frequency of different intervention types in "required info" studies
+### Evaluate frequency of different intervention types
 ```{r}
-for_interv <- data %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
+for_interv <- data_results %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
 interv_types <- c("Drug", "Other", "Biological", "Behavioral", "Device", "Procedure", "Dietary Supplement", "Radiation", "Diagnostic Test", "Genetic", "Combination Product")
 for (i in interv_types) {
   print(i)
@@ -90,13 +85,6 @@ for (i in interv_types) {
   print(temp)
 }
 ```
-### Evaluate frequency of different intervention types in "published" studies
-```{r}
-for_interv2 <- published %>% dplyr::select(nct_id, all_interv_types) %>% distinct()
-for (i in interv_types) {
-  print(i)
-  temp <- dim(for_interv2[grepl(i, for_interv2$all_interv_types),])[1]
-  print(temp)
-}
 
+```{r}
 ```
