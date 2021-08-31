@@ -140,3 +140,14 @@ head(out)
 out <- number_nas_cond("Dietary Supplement", for_interv2, published)
 head(out)
 #40 out of 306 studies
+
+#How many trials are of prevention versus treatment? All required info dataset
+data %>% select(primary_purpose, nct_id) %>% distinct() %>% count(primary_purpose)
+#Treatment - 3,721
+#Prevention - 348
+
+#How many trials are of prevention versus treatment? Published dataset
+published %>% select(primary_purpose, nct_id) %>% distinct() %>% count(primary_purpose)
+#NA - 5,863
+#Treatment - 4,042
+#Prevention - 904
