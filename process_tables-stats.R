@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr)
 
 #Rows: 105,790
-d <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+outcome_analyses <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 outcomes <- read.delim("outcomes.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 brief_sum <- read.delim("brief_summaries.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 all_cond <- read.delim("all_conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
@@ -17,6 +17,8 @@ elig <- read.delim("eligibilities.txt", header=T, stringsAsFactors=F, row.names=
 result_g <- read.delim("result_groups.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 studies <- read.delim("studies.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 study_ref <- read.delim("study_references.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+previously_filtered <- read.delim("shared_designs_studies.txt", header=F, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+colnames(previously_filtered) <- c("nct_id")
 
 mesh_cond <- read.delim("mesh-conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 mesh_interv <- read.delim("mesh-interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
@@ -53,7 +55,8 @@ result_g$result_group.description <- clean_data(result_g$result_group.descriptio
 
 #Table with required data
 #Rows: 106,034
-required_res <- merge(outcome_analyses[c( "outcome_analyses.id", "nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], brief_sum, by="nct_id")
+required_res0 <- merge(previously_filtered, brief_sum, by="nct_id")
+required_res <- merge(outcome_analyses[c( "outcome_analyses.id", "nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], required_res0, by="nct_id")
 #Rows: 106,034
 required_res2 <- merge(required_res, all_cond, by="nct_id")
 #Rows: 106,034
