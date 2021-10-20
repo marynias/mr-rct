@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr)
 
 #Rows: 105,790
-d <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+outcome_analyses <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 outcomes <- read.delim("outcomes.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 brief_sum <- read.delim("brief_summaries.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 all_cond <- read.delim("all_conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
