@@ -1,5 +1,10 @@
 library("tidyverse")
 library("epigraphdb")
+library("patchwork")
+
+#Set ggplot2 theme
+theme_set(theme_gray()+ theme(legend.key=element_blank(), axis.line = element_line(size=0.5),panel.background = element_rect(fill=NA,size=rel(20)), panel.grid.minor = element_line(colour = NA), plot.title = element_text(size=16), axis.text = element_text(size=12), axis.title = element_text(size=14), strip.text.x = element_text(size = 16)))
+
 
 #MR studies
 mr_mh <- read.csv("mendelian-mh.csv", stringsAsFactors=FALSE)
@@ -20,8 +25,14 @@ length(mtiab_uniq)
 
 mr_tiab_yearly_sum <- mr_tiab %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
 
-ggplot(data = mr_tiab_yearly_sum, aes(x = Publication.Year, y = n))+
-  geom_line(color = "#00AFBB", size = 2)
+mr_papers <- ggplot(data = mr_tiab_yearly_sum, aes(x = Publication.Year, y = n))+
+  geom_line(color = "#00AFBB", size = 2) + ylab("Study count") + xlab("Year of publication") + 
+  scale_y_continuous(labels = scales::comma, expand=c(0,0))
+
+ggsave("mr_papers.png", width=10, height=7, units=c("cm"), dpi=600, limitsize=F)
+
+#Combine RCT + MR in one plot.
+
 
 #Query triples in EpigraphDb containg our MR studies.
 
@@ -67,28 +78,28 @@ write.table(joined, "mr_tiab_triples_joined.tsv", sep="\t", quote=F, row.names=F
 exposures_mr <- joined %>% group_by(sub_name) %>% count() %>% arrange(desc(n))
 write.table(exposures_mr, "mr_top_exposures.tsv", sep="\t", quote=F, row.names=F)
 exposures_mr$sub_name <- factor(exposures_mr$sub_name, levels=exposures_mr$sub_name)
-ggplot(exposures_mr[1:15,],
+exposure_mr_fig <- ggplot(exposures_mr[1:15,],
        aes(x = n, y = sub_name)) +
-  geom_col(fill='hotpink4') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#00AFBB') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 
 #What is the most popular outcome?
 outcome_mr <- joined %>% group_by(obj_name) %>% count() %>% arrange(desc(n))
 write.table(outcome_mr, "mr_top_outcomes.tsv", sep="\t", quote=F, row.names=F)
 outcome_mr$obj_name <- factor(outcome_mr$obj_name, levels=outcome_mr$obj_name)
-ggplot(outcome_mr[1:15,],
+outcome_mr_fig <- ggplot(outcome_mr[1:15,],
        aes(x = n, y = obj_name)) +
-  geom_col(fill='hotpink4') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#00AFBB') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 
 #What is the most popular predicate?
 predicate_mr <- joined %>% group_by(predicate) %>% count() %>% arrange(desc(n))
 write.table(predicate_mr, "mr_top_predicates.tsv", sep="\t", quote=F, row.names=F)
 predicate_mr$predicate <- factor(predicate_mr$predicate, levels=predicate_mr$predicate)
-ggplot(predicate_mr[1:15,],
+predicate_mr_fig <- ggplot(predicate_mr[1:15,],
        aes(x = n, y = predicate)) +
-  geom_col(fill='hotpink4') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#00AFBB') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 #How many MR papers from Pubmed have a lit triple?
 b = length(mr_tiab$PMID)
 a = length(unique(joined$lit.id))
@@ -100,8 +111,9 @@ mr_select <- mr_tiab[mr_tiab$PMID %in% joined$lit.id,]
 write.table(mr_select, "mr_select.tsv", sep="\t", quote=F, row.names=F)
 mr_tiab_yearly_sum_select <- mr_select %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
 ggplot(data = mr_tiab_yearly_sum_select, aes(x = Publication.Year, y = n))+
-  geom_line(color = "#00AFBB", size = 2)
-
+  geom_line(color = "#00AFBB", size = 2) + ylab("Study count") + xlab("Year of publication") +
+  scale_y_continuous(labels = scales::comma, expand=c(0,0))
+ggsave("mr_triples_timeline.png", width=10, height=7, units=c("cm"), dpi=600, limitsize=F)
 
 ####Load in RCT studies
 all_rct_files <- list.files(pattern = "^csv-randomized-set*", recursive = TRUE)
@@ -123,8 +135,24 @@ all_normal_together <- all_normal_together %>% distinct()
 
 rct_yearly_sum <- all_normal_together %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
 
-ggplot(data = rct_yearly_sum, aes(x = Publication.Year, y = n))+
-  geom_line(color = "#00AFBB", size = 2)
+rct_papers <- ggplot(data = rct_yearly_sum, aes(x = Publication.Year, y = n))+
+  geom_line(color = "#F06543", size = 2) + ylab("Study count") + xlab("Year of publication") + 
+  scale_y_continuous(labels = scales::comma, expand=c(0,0)) 
+ggsave("rct_papers.png", width=10, height=7, units=c("cm"), dpi=600, limitsize=F)
+
+#Plot RCT and MR counts on 1 plot
+mr_papers + rct_papers
+
+merged_counts <- merge(mr_tiab_yearly_sum, rct_yearly_sum, by="Publication.Year", all.y=T)
+colnames(merged_counts) <- c("Publication_year", "MR", "RCT")
+
+merged_counts_long <- merged_counts %>% gather(., key="study_type", value="count", 2:3)
+
+ggplot(data = merged_counts_long, aes(x = Publication_year, y = count, colour=study_type))+
+  geom_line(size = 2) + ylab("Study count") + xlab("Year of publication") + 
+  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + scale_colour_manual(values=c("#00AFBB", "#F06543")) +
+  labs(colour='study type') 
+ggsave("rct_mr_combined_count.png", width=20, height=12, units=c("cm"), dpi=600, limitsize=F)
 
 quoted <- gsub("^", "'", all_normal_together$PMID)
 quoted <- gsub("$", "'", quoted)
@@ -161,28 +189,34 @@ write.table(joined2, "rct_triples_joined.tsv", sep="\t", quote=F, row.names=F)
 exposures_rct <- joined2 %>% group_by(sub_name) %>% count() %>% arrange(desc(n))
 write.table(exposures_rct, "rct_top_exposures.tsv", sep="\t", quote=F, row.names=F)
 exposures_rct$sub_name <- factor(exposures_rct$sub_name, levels=exposures_rct$sub_name)
-ggplot(exposures_rct[1:15,],
+exposure_rtc_fig <- ggplot(exposures_rct[1:15,],
        aes(x = n, y = sub_name)) +
-  geom_col(fill='forestgreen') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#F06543') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 
 
 #What is the most popular outcome?
 outcome_rct <- joined2 %>% group_by(obj_name) %>% count() %>% arrange(desc(n))
 write.table(outcome_rct, "rct_top_outcomes.tsv", sep="\t", quote=F, row.names=F)
 outcome_rct$obj_name <- factor(outcome_rct$obj_name, levels=outcome_rct$obj_name)
-ggplot(outcome_rct[1:15,],
+outcome_rtc_fig <- ggplot(outcome_rct[1:15,],
        aes(x = n, y = obj_name)) +
-  geom_col(fill='forestgreen') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#F06543') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 #What is the most popular predicate?
 predicate_rct <- joined2 %>% group_by(predicate) %>% count() %>% arrange(desc(n))
 write.table(predicate_rct, "rct_top_predicates.tsv", sep="\t", quote=F, row.names=F)
 predicate_rct$predicate <- factor(predicate_rct$predicate, levels=predicate_rct$predicate)
-ggplot(predicate_rct[1:15,],
+predicate_rtc_fig <- ggplot(predicate_rct[1:15,],
        aes(x = n, y = predicate)) +
-  geom_col(fill='forestgreen') + 
-  scale_y_discrete(limits=rev)
+  geom_col(fill='#F06543') + 
+  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
+
+
+
+#One figure comparing exposure, predicates, outcomes in MR/RCT
+(exposure_mr_fig | exposure_rtc_fig) / (predicate_mr_fig | predicate_rtc_fig) /(outcome_mr_fig | outcome_rtc_fig)
+ggsave("rct_mr_triple_count.png", width=100, height=50, units=c("cm"), dpi=600, limitsize=F)
 #How many RCT papers from Pubmed have a lit triple?
 b = length(all_normal_together$PMID)
 a = length(unique(joined2$lit.id))
@@ -194,7 +228,27 @@ rct_select <- all_normal_together[all_normal_together$PMID %in% joined2$lit.id,]
 write.table(rct_select, "rct_select.tsv", sep="\t", quote=F, row.names=F)
 rct_yearly_sum_select <- rct_select %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
 ggplot(data = rct_yearly_sum_select, aes(x = Publication.Year, y = n))+
-  geom_line(color = "#00AFBB", size = 2)
+  geom_line(color = "#F06543", size = 2) + ylab("Study count") + xlab("Year of publication") + 
+  scale_y_continuous(labels = scales::comma, expand=c(0,0)) 
+ggsave("rct_tripes_timeline.png", width=10, height=7, units=c("cm"), dpi=600, limitsize=F)
+
+#Plot number of papers and triples on the same timeline
+merged_counts <- merge(mr_tiab_yearly_sum, rct_yearly_sum, by="Publication.Year", all.y=T)
+merged_counts2 <- merge(merged_counts, mr_tiab_yearly_sum_select, by="Publication.Year", all.x=T)
+colnames(merged_counts2) <- c("Publication.Year", "MR", "RCT", "MR_triple")
+merged_counts3 <- merge(merged_counts2, rct_yearly_sum_select, by="Publication.Year", all.x=T)
+colnames(merged_counts3) <- c("Publication.Year", "MR", "RCT", "MR_triple", "RCT_triple")
+
+merged_counts3_long <- merged_counts3 %>% gather(., key="study_type", value="count", 2:5)
+
+ggplot(data = merged_counts3_long, aes(x = Publication.Year, y = count, group=study_type))+
+  geom_line(size=1, aes(linetype=study_type, color=study_type)) + ylab("Study count") + xlab("Year of publication") + 
+  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + 
+  scale_colour_manual(name="", labels=c("MR papers", "MR triples", "RCT papers", "RCT triples"), values=c("#00AFBB", "#00AFBB", "#F06543", "#F06543")) +
+  scale_linetype_manual(name="", labels=c("MR papers", "MR triples", "RCT papers", "RCT triples"), values=c("solid", "dotted", "solid", "dotted")) +
+  labs(colour='study type') 
+
+ggsave("all_timelines.png", width=20, height=12, units=c("cm"), dpi=600, limitsize=F)
 
 #Find overlap between RCT and MR (exposure and outcome matching)
 matched <- merge(joined, joined2, by=c("sub_name", "obj_name"))
