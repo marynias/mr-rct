@@ -5,12 +5,10 @@ library("patchwork")
 library("ggpubr")
 source("clingov_functions.R")
 
-#Primary outcomes only
-data_in <- read.delim("clingov_required_primary.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+#All outcomes
+data_in <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 data <- data_in %>% dplyr::select(nct_id, all_interv_types, intervention_model, study_type, primary_purpose, allocation, overall_status, gender, phase, number_of_arms, mesh_interv) %>% distinct()
 data_results <- data_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
-#All outcomes
-#all_req_data <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 #Table with studies with no results in the db but PMID with results
 published_in <- read.delim("clingov_noresult.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 published <- published_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
@@ -64,8 +62,8 @@ summary(data$number_of_arms)
 (intervention | purpose ) / (status | phase) / (gender | number_arms )
 
 ggarrange(intervention, purpose, status, phase, gender, number_arms, ncol = 2, nrow = 3)
-ggarrange(phase, status, gender, intervention, number_arms, purpose, ncol = 2, nrow = 3)
-ggarrange(intervention, status, gender, phase, number_arms, purpose, ncol = 2, nrow = 3)
+#ggarrange(phase, status, gender, intervention, number_arms, purpose, ncol = 2, nrow = 3)
+#ggarrange(intervention, status, gender, phase, number_arms, purpose, ncol = 2, nrow = 3)
 
 
 #Outcomes table
@@ -88,7 +86,8 @@ ggsave("secondary_outcomes.png", width=10, height=8, units=c("cm"), dpi=600, lim
 summary(secondary_counts)
 
 #Distribution of p-values
-pvalues <- ggplot(data_results, aes(p_value)) + geom_histogram(fill='darkblue', colour="black") + scale_x_continuous(limits = c(0, 1)) + scale_y_continuous(limits = c(0, 1800), labels = scales::comma, expand=c(0,0)) + xlab("P-value") + ylab("Study count")
+data_results$p_value <- as.numeric(data_results$p_value)
+pvalues <- ggplot(data_results, aes(p_value)) + geom_histogram(fill='darkblue', colour="black") + scale_x_continuous(limits = c(0, 1)) + scale_y_continuous(limits = c(0, 13000), labels = scales::comma, expand=c(0,0)) + xlab("P-value") + ylab("Result count")
 
 ggtitle("P-value distribution")
 ggsave("p-values.png", width=10, height=8, units=c("cm"), dpi=600, limitsize=F)
