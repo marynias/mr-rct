@@ -93,7 +93,7 @@ results.to_csv("conditions.txt", sep="\t", index=False)
 #OUTCOME ANALYSES
 sql = """select * from outcome_analyses"""
 results = run_query(conn,sql)
-results = remove_empty(results, ["outcome_id", "param_type", "param_value", "p_value", "method"])
+#results = remove_empty(results, ["outcome_id", "param_type", "param_value", "p_value", "method"])
 results.to_csv("outcome_analyses.txt", sep="\t", index=False)
 
 ###OUTCOMES
