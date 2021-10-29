@@ -7,11 +7,11 @@ source("clingov_functions.R")
 
 #All outcomes
 data_in <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-data <- data_in %>% dplyr::select(nct_id, all_interv_types, intervention_model, study_type, primary_purpose, allocation, overall_status, gender, phase, number_of_arms, mesh_interv) %>% distinct()
+data <- data_in %>% dplyr::select(nct_id, all_interv_types, intervention_model, study_type, primary_purpose, allocation, overall_status, gender, phase, number_of_arms, mesh_interv, mesh_cond) %>% distinct()
 data_results <- data_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
 #Table with studies with no results in the db but PMID with results
 published_in <- read.delim("clingov_noresult.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-published <- published_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
+published <- published_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv, mesh_cond           ) %>% distinct()
 
 introduce(data)
 plot_intro(data)
@@ -93,6 +93,8 @@ ggtitle("P-value distribution")
 ggsave("p-values.png", width=10, height=8, units=c("cm"), dpi=600, limitsize=F)
 summary(data_results$p_value)
 
+zeroes <- data_results[data_results$p_value < 0.05,]
+
 primary + secondary + pvalues
 
 #What are the top types of methods among our studies?
@@ -137,3 +139,20 @@ out <- count_nas("Behavioral", for_interv2, published)
 #How many we don't?
 out <- count_nas("Dietary Supplement", for_interv, data)
 out <- count_nas("Dietary Supplement", for_interv2, published)
+
+#Same but for condition MeSH terms
+count_nas2 <- function(x,y,z) {
+  my_studies <- y[grepl(x, y$all_interv_types),]$nct_id
+  rel <- z %>% select(nct_id, mesh_cond) %>% distinct() %>% filter(nct_id %in% my_studies)
+  counts <- rel %>% count(mesh_cond) %>% arrange(desc(n))
+}
+out <- count_nas2("Drug", for_interv, data)#No-Results
+out <- count_nas2("Drug", for_interv2, published)
+#For how many of the studies with Behavioral intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+out <- count_nas2("Behavioral", for_interv, data)
+out <- count_nas2("Behavioral", for_interv2, published)
+#For how many of the studies with Dietary Supplement intervention, we have a Mesh intervention term mapped?
+#How many we don't?
+out <- count_nas2("Dietary Supplement", for_interv, data)
+out <- count_nas2("Dietary Supplement", for_interv2, published)
