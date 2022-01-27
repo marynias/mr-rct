@@ -19,5 +19,5 @@ multi_snp2 <- multi_snp2[multi_snp2$mr_method == "IVW",]
 
 merged_multi <- merge(multi_snp2, mr_mh_slimmed, by.x="outcome", by.y="id.outcome")
 merged_single <- merge(single_snp2, mr_mh_slimmed, by.x="outcome", by.y="id.outcome")
-write.table(merged_multi, "merged_multi_significant.txt", quote=F, row.names=F)
-write.table(merged_single, "merged_single_significant.txt", quote=F, row.names=F)
+write.table(merged_multi, "merged_multi_significant.txt", quote=F, row.names=F, sep="\t")
+write.table(merged_single, "merged_single_significant.txt", quote=F, row.names=F, sep="\t")
