@@ -1,25 +1,26 @@
 ###Process ClinGov tables
 library(dplyr)
 library(stringr)
+library("tidyr")
 
 #Rows: 105,790
-outcome_analyses <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-outcomes <- read.delim("outcomes.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-brief_sum <- read.delim("brief_summaries.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-all_cond <- read.delim("all_conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-all_interv <- read.delim("all_interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-all_interv_types <- read.delim("all_intervention_types.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-cond <- read.delim("conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-interv <- read.delim("interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-design_g <- read.delim("design_groups.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-design <- read.delim("designs.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-elig <- read.delim("eligibilities.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-result_g <- read.delim("result_groups.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-studies <- read.delim("studies.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-study_ref <- read.delim("study_references.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+outcome_analyses <- read.delim("outcome_analyses.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+outcomes <- read.delim("outcomes.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+brief_sum <- read.delim("brief_summaries.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+all_cond <- read.delim("all_conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+all_interv <- read.delim("all_interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+all_interv_types <- read.delim("all_intervention_types.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+cond <- read.delim("conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+interv <- read.delim("interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+design_g <- read.delim("design_groups.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+design <- read.delim("designs.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+elig <- read.delim("eligibilities.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+result_g <- read.delim("result_groups.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+studies <- read.delim("studies.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+study_ref <- read.delim("study_references.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 
-mesh_cond <- read.delim("mesh-conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
-mesh_interv <- read.delim("mesh-interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
+mesh_cond <- read.delim("mesh-conditions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
+mesh_interv <- read.delim("mesh-interventions.txt", header=T, stringsAsFactors=F, row.names=NULL, sep="\t")
 #Create tables with all mesh terms (condition and intervention) associated with a given study id.
 mesh_cond_all <- mesh_cond %>% dplyr::select(nct_id, downcase_mesh_term) %>% group_by(nct_id) %>% mutate(mesh_cond= paste0(downcase_mesh_term, collapse = "|")) %>% dplyr::select(nct_id, mesh_cond) %>% distinct()
 mesh_interv_all <- mesh_interv %>% dplyr::select(nct_id, downcase_mesh_term) %>% group_by(nct_id) %>% mutate(mesh_interv= paste0(downcase_mesh_term, collapse = "|")) %>% dplyr::select(nct_id, mesh_interv) %>% distinct()
@@ -75,10 +76,34 @@ required_res10 <- merge(required_res9, outcomes[c("nct_id", "outcome_id", "outco
 required_res10 <- required_res10 %>% dplyr::select(nct_id, outcome_analyses.id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description)
 write.table(required_res10, "clingov_required.tsv", sep="\t", quote=F, row.names=F)
 
+#All the RCTs, with or without results.
+non_required_res <- merge(outcome_analyses[c( "outcome_analyses.id", "nct_id", "outcome_id", "param_type", "param_value", "dispersion_type", "dispersion_value", "ci_lower_limit", "ci_upper_limit", "ci_percent", "p_value", "method")], brief_sum, by="nct_id", all.y=T)
+non_required_res2 <- merge(non_required_res, all_cond, by="nct_id", all.x=T)
+non_required_res3 <- merge(non_required_res2, all_interv, by="nct_id", all.x=T)
+non_required_res4 <- merge(non_required_res3, design, by="nct_id", all.x=T)
+non_required_res5 <- merge(non_required_res4, all_interv_types, by="nct_id", all.x=T)
+non_required_res6 <- merge(non_required_res5, elig[c("nct_id", "gender", "criteria")], by="nct_id", all.x=T)
+non_required_res7 <- merge(non_required_res6, studies[c("nct_id", "brief_title", "study_type", "overall_status", "phase", "number_of_arms", "enrollment")], by="nct_id", all.x=T)
+non_required_res8 <- merge(non_required_res7, mesh_cond_all, by="nct_id", all.x=T)
+non_required_res9 <- merge(non_required_res8, mesh_interv_all, by="nct_id", all.x=T)
+non_required_res10 <- merge(non_required_res9, outcomes[c("nct_id", "outcome_id", "outcome.title")], by=c("nct_id", "outcome_id"), all.x=T)
+non_required_res10 <- non_required_res10 %>% dplyr::select(nct_id, outcome_analyses.id, outcome_id, outcome.title, mesh_interv, all_interv, all_interv_types, mesh_cond, all_cond, intervention_model, study_type, primary_purpose, allocation, brief_title, number_of_arms, param_type, param_value, p_value, method, ci_lower_limit, ci_upper_limit, ci_percent, dispersion_type, dispersion_value, gender, enrollment, overall_status, phase, criteria, description) 
+
+#Filter  to keep RCTs
+non_required_res11 <- non_required_res10 %>% filter(study_type == "Interventional") %>% filter(number_of_arms > 1) %>% drop_na(intervention_model) %>% 
+drop_na(primary_purpose) %>% drop_na(gender)
+
+write.table(non_required_res11, "clingov_non_required.tsv", sep="\t", quote=F, row.names=F)
+
 #Filtered down to only primary outcomes.
 primary_outcomes <- outcomes[outcomes$outcome_type == "Primary",]
 required_res11 <- required_res10[required_res10$outcome_id %in% primary_outcomes$outcome_id,]
 write.table(required_res11, "clingov_required_primary.tsv", sep="\t", quote=F, row.names=F)
+
+#Filtered down to only primary outcomes.
+primary_outcomes <- outcomes[outcomes$outcome_type == "Primary",]
+non_required_res11 <- non_required_res11[non_required_res11$outcome_id %in% primary_outcomes$outcome_id,]
+write.table(non_required_res11, "clingov_non_required_primary.tsv", sep="\t", quote=F, row.names=F)
 
 #Table with additional data.
 #Rows: 7,485
