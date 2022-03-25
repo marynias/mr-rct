@@ -3,6 +3,8 @@ library("dplyr")
 library("ggplot2")
 library("patchwork")
 library("ggpubr")
+library("anytime")
+library("lubridate")
 source("clingov_functions.R")
 
 #All outcomes
@@ -156,3 +158,55 @@ out <- count_nas2("Behavioral", for_interv2, published)
 #How many we don't?
 out <- count_nas2("Dietary Supplement", for_interv, data)
 out <- count_nas2("Dietary Supplement", for_interv2, published)
+
+
+#Load a list of identifiers with all RCTs in ClinGov database (taken from clingov_non_required.tsv file).
+nct_ids <- read.delim("RCT_ids.txt", header=F)
+#Study table with data details.
+study_ext <- read.delim("studies_ext.txt", stringsAsFactors = F, na.strings="")
+
+#Subset study_ext to all RCTs
+study_ext_all <- study_ext[study_ext$nct_id %in% nct_ids$V1,]
+#Subet study)ext to RCTs with results.
+study_ext_results <- study_ext[study_ext$nct_id %in% data$nct_id,]
+
+#Look at the date fields, and check which ones have most missing data.
+#317
+dim(study_ext_all[is.na(study_ext_all$start_date),])
+#3720
+dim(study_ext_all[is.na(study_ext_all$completion_date),])
+#0
+dim(study_ext_all[is.na(study_ext_all$study_first_submitted_date),])
+#136490     
+dim(study_ext_all[is.na(study_ext_all$results_first_submitted_date),])
+#317
+dim(study_ext_all[is.na(study_ext_all$start_month_year),])
+#3720
+dim(study_ext_all[is.na(study_ext_all$completion_month_year),])
+
+#Use start date
+study_ext_all$date <- anytime::anydate(study_ext_all$start_date)
+#Remove NAs
+study_ext_all <- study_ext_all[!is.na(study_ext_all$date),]
+#The earliest study start year is 1966.
+min(study_ext_all$date)
+study_ext_all$year <- year(study_ext_all$date)
+study_all_year <- study_ext_all %>% count(year)
+#How many RCTs before 2000
+study_all_year %>% filter(year < 2000) %>% summarise(Total = sum(n)) 
+
+##Same but for RCTs with results.
+#Use start date
+study_ext_results$date <- anytime::anydate(study_ext_results$start_date)
+#Remove NAs
+study_ext_results <- study_ext_results[!is.na(study_ext_results$date),]
+#The earliest study start year is 1966.
+min(study_ext_results$date)
+study_ext_results$year <- year(study_ext_results$date)
+study_results_year <- study_ext_results %>% count(year)
+#How many RCTs before 2000
+study_results_year %>% filter(year < 2000) %>% summarise(Total = sum(n)) 
+
+#How many RCTs before 2000
+study_results_year %>% filter(year < 2012) %>% summarise(Total = sum(n)) 
+
