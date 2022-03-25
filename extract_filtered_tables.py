@@ -116,6 +116,27 @@ results = results[to_keep]
 results = results.loc[results['number_of_arms'] > 1]
 results.to_csv("studies.txt", sep="\t", index=False)
 
+sql = """select nct_id, brief_title, study_type, baseline_population, official_title, overall_status, phase, number_of_arms, limitations_and_caveats, enrollment from studies"""
+results = run_query(conn,sql)
+results = remove_empty(results, ["brief_title", "study_type", "overall_status", "number_of_arms", "enrollment"])
+to_keep = results['study_type'].isin(["Interventional"])
+results = results[to_keep]
+results = results.loc[results['number_of_arms'] > 1]
+results.to_csv("studies.txt", sep="\t", index=False)
+
+sql = """select nct_id, brief_title, study_type, baseline_population, official_title, overall_status, 
+phase, number_of_arms, limitations_and_caveats, enrollment from studies,
+study_first_submitted_date, results_first_submitted_date, start_date,
+completion_date, start_month_year, completion_month_year
+"""
+results = run_query(conn,sql)
+results = remove_empty(results, ["brief_title", "study_type", "overall_status", "number_of_arms", "enrollment"])
+to_keep = results['study_type'].isin(["Interventional"])
+results = results[to_keep]
+results = results.loc[results['number_of_arms'] > 1]
+results.to_csv("studies_ext.txt", sep="\t", index=False)
+
+
 #MESH terms - interventions
 sql = """select * from browse_interventions"""
 results = run_query(conn,sql)
