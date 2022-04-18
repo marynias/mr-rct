@@ -5,11 +5,13 @@ library("patchwork")
 library("ggpubr")
 library("anytime")
 library("lubridate")
+library("reshape2")
 source("clingov_functions.R")
 
 #All outcomes
 data_in <- read.delim("clingov_required.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
 data <- data_in %>% dplyr::select(nct_id, all_interv_types, intervention_model, study_type, primary_purpose, allocation, overall_status, gender, phase, number_of_arms, mesh_interv, mesh_cond) %>% distinct()
+completed_trials <- data_in[data_in$overall_status == "Completed",]
 data_results <- data_in %>% dplyr::select(nct_id, all_interv_types, method, param_type, p_value, mesh_interv) %>% distinct()
 #Table with studies with no results in the db but PMID with results
 published_in <- read.delim("clingov_noresult.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
@@ -162,13 +164,19 @@ out <- count_nas2("Dietary Supplement", for_interv2, published)
 
 #Load a list of identifiers with all RCTs in ClinGov database (taken from clingov_non_required.tsv file).
 nct_ids <- read.delim("RCT_ids.txt", header=F)
+#Load a list of identifiers with all completed RCTs in ClinGov database (taken from clingov_non_required.tsv file).
+nct_ids_comp <- read.delim("RCT_ids_comp.txt", header=F)
 #Study table with data details.
 study_ext <- read.delim("studies_ext.txt", stringsAsFactors = F, na.strings="")
 
 #Subset study_ext to all RCTs
 study_ext_all <- study_ext[study_ext$nct_id %in% nct_ids$V1,]
-#Subet study)ext to RCTs with results.
+#Subset study_ext to all completed RCTs
+study_ext_all_comp <- study_ext[study_ext$nct_id %in% nct_ids_comp$V1,]
+#Subset study_ext to RCTs with results.
 study_ext_results <- study_ext[study_ext$nct_id %in% data$nct_id,]
+#Subset study_ext to RCTs with results = only completed trials.
+study_ext_results_comp <- study_ext[study_ext$nct_id %in% completed_trials$nct_id,]
 
 #Look at the date fields, and check which ones have most missing data.
 #317
@@ -209,4 +217,43 @@ study_results_year %>% filter(year < 2000) %>% summarise(Total = sum(n))
 
 #How many RCTs before 2000
 study_results_year %>% filter(year < 2012) %>% summarise(Total = sum(n)) 
+
+##Subsetting to only completed trials.
+study_ext_results_comp$date <- anytime::anydate(study_ext_results_comp$start_date)
+#Remove NAs
+study_ext_results_comp <- study_ext_results_comp[!is.na(study_ext_results_comp$date),]
+median(study_ext_results_comp$date)
+study_ext_all_comp$date <- anytime::anydate(study_ext_all_comp$start_date)
+#Remove NAs
+study_ext_all_comp <- study_ext_all_comp[!is.na(study_ext_all_comp$date),]
+#Mark the completed RCTs with results available
+study_ext_all_comp$results <- ifelse(study_ext_all_comp$nct_id %in% study_ext_results_comp$nct_id, "yes", "no")
+study_ext_all_comp$year <- year(study_ext_all_comp$date)
+
+study_ext_all_comp2 <- study_ext_all_comp %>% group_by(results) %>% count(year)
+study_ext_all_comp3 = melt(study_ext_all_comp2, id=c("year", "results"))
+study_ext_all_comp3$results <- as.factor(study_ext_all_comp3$results)
+
+ggplot(study_ext_all_comp3, aes(x=year, y=value, group=results, fill=results)) + 
+  geom_bar(position="stack", stat="identity", colour="black", size=0.2) +
+  xlab('') +
+  ylab("Number of RCTs") +
+  scale_x_continuous(breaks = c(1980, 1990, 2000, 2010, 2020)) +
+  scale_y_continuous() +
+  theme_Publication() +
+  theme(axis.text.x = element_text(
+    colour = 'black', angle = 90, size = 13,
+    hjust = 0.5, vjust = 0.5)) 
+
+
+ggplot(study_ext_all_comp3, aes(x=year, y=value, group=results, fill=results, colour=results)) + 
+  geom_bar(position="fill", stat="identity") +
+  xlab('') +
+  ylab("Fraction of RCTs") + 
+  scale_x_continuous(breaks = c(1980, 1990, 2000, 2010, 2020)) +
+  scale_y_continuous() +
+  theme_Publication() +
+  theme(axis.text.x = element_text(
+    colour = 'black', angle = 90, size = 13,
+    hjust = 0.5, vjust = 0.5)) 
 
