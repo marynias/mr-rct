@@ -1,4 +1,4 @@
-<span style="color:blue"> ## Python/R scripts for analyses described in "Systematic comparison of Mendelian randomization studies and randomized controlled trials using electronic databases" </span>
+## Python/R scripts for analyses described in "Systematic comparison of Mendelian randomization studies and randomized controlled trials using electronic databases"
 
 ##### [explore-rct.ipynb](https://github.com/marynias/mr-rct/blob/master/explore-rct.ipynb)
 
@@ -12,12 +12,14 @@
 
 ### Analyses comparing eQTL and pQTL MR results with RCT results
 
+#### Link pQTL MR results with RCT results via drug matching using EpigraphDB
 ##### [get_drug_data_EpigraphDB_pQTL.R](https://github.com/marynias/mr-rct/blob/master/get_drug_data_EpigraphDB_pQTL.R)
 
+#### Pre-process eQTL MR results for further analysis
 ##### [xQTL-processing.R](https://github.com/marynias/mr-rct/blob/master/xQTL-processing.R)
-
+#### Link eQTL MR results (multi-SNP instruments) with RCT results via drug matching using EpigraphDB
 ##### [get_drug_data_EpigraphDB_eQTL_multi.R](https://github.com/marynias/mr-rct/blob/master/get_drug_data_EpigraphDB_eQTL_multi.R)
-
+#### Link eQTL MR results (single-SNP instruments) with RCT results via drug matching using EpigraphDB
 ##### [get_drug_data_EpigraphDB_eQTL_single.R](https://github.com/marynias/mr-rct/blob/master/get_drug_data_EpigraphDB_eQTL_single.R)
 
 ### Analyses for MR and RCT records retrieved from PubMed combined with SemMedDb semantic triples retrieved via EpigraphDB
