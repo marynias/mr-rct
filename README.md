@@ -1,4 +1,4 @@
-## Python/R scripts for analyses described in "Systematic comparison of Mendelian randomization studies and randomized controlled trials using electronic databases"
+<span style="color:blue"> ## Python/R scripts for analyses described in "Systematic comparison of Mendelian randomization studies and randomized controlled trials using electronic databases" </span>
 
 ##### [explore-rct.ipynb](https://github.com/marynias/mr-rct/blob/master/explore-rct.ipynb)
 
