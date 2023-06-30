@@ -2,14 +2,12 @@
 
 #### A Jupyter notebook with basic exploration of data strored within ClinicalTrials.Gov database
 ##### [explore-rct.ipynb](https://github.com/marynias/mr-rct/blob/master/explore-rct.ipynb)
-
+#### Extract required tables from ClinicalTrials.Gov
 ##### [extract_filtered_tables.py](https://github.com/marynias/mr-rct/blob/master/extract_filtered_tables.py) 
-
+#### Process (filter, merge) tables from ClinicalTrials.Gov
 ##### [process_tables.R](https://github.com/marynias/mr-rct/blob/master/process_tables.R)
-
+#### Quantitative and qualitative description of the filtered RCT dataset from ClinicalTrials.Gov
 ##### [clingov_data_explorer.R](https://github.com/marynias/mr-rct/blob/master/clingov_data_explorer.R)
-
-##### [clingov_data_explorer.Rmd](https://github.com/marynias/mr-rct/blob/master/clingov_data_explorer.Rmd)
 
 ### Analyses comparing eQTL and pQTL MR results with RCT results
 
