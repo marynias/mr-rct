@@ -25,3 +25,12 @@
 
 ##### [mr-rtc_pubmed_epigraphdb.R](https://github.com/marynias/mr-rct/blob/master/mr-rtc_pubmed_epigraphdb.R)
 
+## Data sources
+##### ClinicalTrials.Gov data was accessed via AACT: https://aact.ctti-clinicaltrials.org/download and analysed data subset is featured in Supplementary Datasets 1 & 2.
+##### pQTL and eQTL MR analysis results are available via EpigraphDB: https://epigraphdb.org/xqtl 
+##### PubMed database can be accessed on https://pubmed.ncbi.nlm.nih.gov/ and analysed data subset is featured in Supplementary Dataset 3.
+##### SemMedDB can be accessed on https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html and analysed data subset is featured in Supplementary Dataset 3.
+##### Case series of MR and RCT studies with matching exposures (interventions) and outcomes (conditions) is featured in Supplementary Dataset 4.
+##### Supplementary Datasets 1-4 are available for download on Zenodo: 
+
+
