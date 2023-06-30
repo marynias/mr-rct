@@ -1,29 +1,22 @@
 library("tidyverse")
 library("epigraphdb")
 library("patchwork")
+library("data.table")
 
 #Set ggplot2 theme
 theme_set(theme_gray()+ theme(legend.key=element_blank(), axis.line = element_line(size=0.5),panel.background = element_rect(fill=NA,size=rel(20)), panel.grid.minor = element_line(colour = NA), plot.title = element_text(size=16), axis.text = element_text(size=12), axis.title = element_text(size=14), strip.text.x = element_text(size = 16)))
 
+#MR studies from PubMed - up to and including 2022, keyword searched in title ad
+#abstract: "mendelian randomisation" OR "mendelian randomization".
 
-#MR studies
-mr_mh <- read.csv("mendelian-mh.csv", stringsAsFactors=FALSE)
-colnames(mr_mh)[1] <- "PMID"
-length(unique(mr_mh$PMID))
-mr_tiab <- read.csv("mendelian-tiab.csv", stringsAsFactors=FALSE)
+mr_tiab <- read.csv("csv-mendelianr-set.csv", stringsAsFactors=FALSE)
 colnames(mr_tiab)[1] <- "PMID"
 length(unique(mr_tiab$PMID))
-#Unique to MH
-mh_uniq <- mr_mh$PMID[!(mr_mh$PMID %in% mr_tiab$PMID)]
-length(mh_uniq)
-#Do not use these entries, titles indicate that they are not relevant
-add_mr_entires <- mr_mh[mr_mh$PMID %in% mh_uniq,]
+#Remove publications from 2023
+mr_tiab <- mr_tiab[mr_tiab$Publication.Year < 2023,]
 
-#Unique to TIAB
-mtiab_uniq <- mr_tiab$PMID[!(mr_tiab$PMID%in% mr_mh$PMID)]
-length(mtiab_uniq)
-
-mr_tiab_yearly_sum <- mr_tiab %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
+#Group by year, sum number of publications and plot
+mr_tiab_yearly_sum <- mr_tiab %>% group_by(Publication.Year) %>% count() 
 
 mr_papers <- ggplot(data = mr_tiab_yearly_sum, aes(x = Publication.Year, y = n))+
   geom_line(color = "#00AFBB", size = 2) + ylab("Study count") + xlab("Year of publication") + 
@@ -31,11 +24,9 @@ mr_papers <- ggplot(data = mr_tiab_yearly_sum, aes(x = Publication.Year, y = n))
 
 ggsave("mr_papers.png", width=10, height=7, units=c("cm"), dpi=600, limitsize=F)
 
-#Combine RCT + MR in one plot.
 
-
-#Query triples in EpigraphDb containg our MR studies.
-
+#Query semantic triples from SemMed in EpigraphDb which contain PubMed IDs of our MR studies
+#identified above.
 quoted <- gsub("^", "'", mr_tiab$PMID)
 quoted <- gsub("$", "'", quoted)
 my_list_ids = paste(quoted, collapse =", ")
@@ -47,7 +38,7 @@ call_epigraphdb <- function(query) {
   endpoint <- "/cypher"
   method <- "POST"
   params <- list(query = query)
-  
+
   results <- query_epigraphdb(
     route = endpoint,
     params = params,
@@ -70,9 +61,11 @@ query2 <-  paste0("MATCH (l1:LiteratureTerm)-[r1:SEMMEDDB_SUB]-(l:LiteratureTrip
 results2 <- call_epigraphdb(query2)
 write.table(results2, "mr_tiab_triples_det.tsv", sep="\t", quote=F, row.names=F)
 
+
 #Join the two tables
 joined <- merge(results, results2, by.x="trip.id", by.y="l.id")
-write.table(joined, "mr_tiab_triples_joined.tsv", sep="\t", quote=F, row.names=F)
+write.table(joined, "mr_tiab_triples_joined.tsv", sep="\t", quote=f, row.names=f)
+
 
 #What is the most popular exposure?
 exposures_mr <- joined %>% group_by(sub_name) %>% count() %>% arrange(desc(n))
@@ -99,17 +92,18 @@ predicate_mr$predicate <- factor(predicate_mr$predicate, levels=predicate_mr$pre
 predicate_mr_fig <- ggplot(predicate_mr[1:15,],
        aes(x = n, y = predicate)) +
   geom_col(fill='#00AFBB') + 
-  scale_y_discrete(limits=rev) + ylab("") + xlab("count")
+  scale_y_discrete(limits=rev) + scale_x_continuous(breaks=c(0,300,600,900,1100)) +
+  ylab("") + xlab("count")
 #How many MR papers from Pubmed have a lit triple?
-b = length(mr_tiab$PMID)
+b = length(unique(mr_tiab$PMID))
 a = length(unique(joined$lit.id))
 a/b
-#Only 17.9% of MR papers have a triple associate with them.
+#Only 36.5% of MR papers have a triple associated with them.
 
 #What publication years do the triples cover?
 mr_select <- mr_tiab[mr_tiab$PMID %in% joined$lit.id,]
 write.table(mr_select, "mr_select.tsv", sep="\t", quote=F, row.names=F)
-mr_tiab_yearly_sum_select <- mr_select %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
+mr_tiab_yearly_sum_select <- mr_select %>% group_by(Publication.Year) %>% count() 
 ggplot(data = mr_tiab_yearly_sum_select, aes(x = Publication.Year, y = n))+
   geom_line(color = "#00AFBB", size = 2) + ylab("Study count") + xlab("Year of publication") +
   scale_y_continuous(labels = scales::comma, expand=c(0,0))
@@ -117,7 +111,6 @@ ggsave("mr_triples_timeline.png", width=10, height=7, units=c("cm"), dpi=600, li
 
 ####Load in RCT studies
 all_rct_files <- list.files(pattern = "^csv-randomized-set*", recursive = TRUE)
-
 
 loadFile <- function(x) {
   print (x)
@@ -130,10 +123,15 @@ all_normal_together <- do.call(rbind,all_normal)
 all_normal_together <- as.data.frame(all_normal_together)
 colnames(all_normal_together)[1] <- "PMID"
 
+#Earlier than published in 2023
+all_normal_together <- all_normal_together[all_normal_together$Publication.Year < 2023,]
+
 all_normal_together <- all_normal_together %>% distinct()
+#Save to table
+write.table(all_normal_together, "all_rct_pubmed.tsv", sep="\t", quote=F, row.names=F)
 
-
-rct_yearly_sum <- all_normal_together %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
+#Yearly sums of papers
+rct_yearly_sum <- all_normal_together %>% group_by(Publication.Year) %>% count() 
 
 rct_papers <- ggplot(data = rct_yearly_sum, aes(x = Publication.Year, y = n))+
   geom_line(color = "#F06543", size = 2) + ylab("Study count") + xlab("Year of publication") + 
@@ -212,21 +210,19 @@ predicate_rtc_fig <- ggplot(predicate_rct[1:15,],
   geom_col(fill='#F06543') + 
   scale_y_discrete(limits=rev) + ylab("") + xlab("count")
 
-
-
 #One figure comparing exposure, predicates, outcomes in MR/RCT
 (exposure_mr_fig | exposure_rtc_fig) / (predicate_mr_fig | predicate_rtc_fig) /(outcome_mr_fig | outcome_rtc_fig)
-ggsave("rct_mr_triple_count.png", width=100, height=50, units=c("cm"), dpi=600, limitsize=F)
+ggsave("rct_mr_triple_count.png", width=35, height=25, units=c("cm"), dpi=600, limitsize=F)
 #How many RCT papers from Pubmed have a lit triple?
 b = length(all_normal_together$PMID)
 a = length(unique(joined2$lit.id))
 a/b
-#Only 11% of RCT papers have a triple associated with them.
+#Only 12.5% of RCT papers have a triple associated with them.
 
 #What publication years do the triples cover?
 rct_select <- all_normal_together[all_normal_together$PMID %in% joined2$lit.id,]
 write.table(rct_select, "rct_select.tsv", sep="\t", quote=F, row.names=F)
-rct_yearly_sum_select <- rct_select %>% group_by(Publication.Year) %>% count() %>%  filter(!(Publication.Year==2022))
+rct_yearly_sum_select <- rct_select %>% group_by(Publication.Year) %>% count()
 ggplot(data = rct_yearly_sum_select, aes(x = Publication.Year, y = n))+
   geom_line(color = "#F06543", size = 2) + ylab("Study count") + xlab("Year of publication") + 
   scale_y_continuous(labels = scales::comma, expand=c(0,0)) 
@@ -243,7 +239,7 @@ merged_counts3_long <- merged_counts3 %>% gather(., key="study_type", value="cou
 
 ggplot(data = merged_counts3_long, aes(x = Publication.Year, y = count, group=study_type))+
   geom_line(size=1, aes(linetype=study_type, color=study_type)) + ylab("Study count") + xlab("Year of publication") + 
-  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + 
+  scale_y_continuous(labels = scales::comma, breaks=c(0, 1000, 2000, 3000, 4000, 5000, 6000), expand=c(0,0)) + 
   scale_colour_manual(name="", labels=c("MR papers", "MR triples", "RCT papers", "RCT triples"), values=c("#00AFBB", "#00AFBB", "#F06543", "#F06543")) +
   scale_linetype_manual(name="", labels=c("MR papers", "MR triples", "RCT papers", "RCT triples"), values=c("solid", "dotted", "solid", "dotted")) +
   labs(colour='study type') 
@@ -255,7 +251,7 @@ matched <- merge(joined, joined2, by=c("sub_name", "obj_name"))
 write.table(matched, "rct_mr_matched.tsv", sep="\t", quote=F, row.names=F)
 
 # A unique set of matching subjects and objects.
-exposure_outcomes <- unique(matched[c("sub_name", "obj_name")])
+exposure_outcomes <- unique(matched[c("sub_name", "obj_name")]) %>% distinct()
 write.table(exposure_outcomes, "exposure-outcome_pairs.tsv", sep="\t", quote=F, row.names=F)
 #Join with MR
 joined_mr <- merge(joined, exposure_outcomes, by=c("sub_name", "obj_name"))
@@ -289,20 +285,18 @@ write.table(outcome_rct, "outcome_lit_count_rct.tsv", sep="\t", quote=F, row.nam
 
 #Now merge these files to compare numbers for MR and RCT.
 doubles_merged <- merge(doubles_mr, doubles_rct, by=c("sub_name", "obj_name"))
-colnames(doubles_merged) <- c("sub_name", "obj_name", "MR", "RTC")
+colnames(doubles_merged) <- c("sub_name", "obj_name", "MR", "RCT")
 write.table(doubles_merged, "exposure_outcome_lit_count_all.tsv", sep="\t", quote=F, row.names=F)
 
 exp_merged <- merge(exp_mr, exp_rct, by="sub_name")
-colnames(exp_merged) <- c("sub_name", "MR", "RTC")
+colnames(exp_merged) <- c("sub_name", "MR", "RCT")
 write.table(exp_merged, "exposure_lit_count_all.tsv", sep="\t", quote=F, row.names=F)
 
 outcome_merged <- merge(outcome_mr, outcome_rct, by="obj_name")
-colnames(outcome_merged) <- c("obj_name", "MR", "RTC")
+colnames(outcome_merged) <- c("obj_name", "MR", "RCT")
 write.table(outcome_merged, "outcome_lit_count_all.tsv", sep="\t", quote=F, row.names=F)
 #How many exposure/outcome pairs do we have in MR and RCT combined?
 exp_out_rct <- unique(joined2[c("sub_name", "obj_name")])
 exp_out_mr <- unique(joined[c("sub_name", "obj_name")])
 combined_exp_out <- rbind(exp_out_mr, exp_out_rct)
-combined_exp_out_distinct <- unique(combined_exp_out[c("sub_name", "obj_name")])
-
-#Plot in ggplot2
+combined_exp_out_distinct <- unique(combined_exp_out[c("sub_name", "obj_name")]) %>% distinct()
