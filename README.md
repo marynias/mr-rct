@@ -32,6 +32,6 @@
 ##### PubMed database can be accessed on https://pubmed.ncbi.nlm.nih.gov/ and analysed data subset is featured in *Supplementary Dataset 4*.
 ##### SemMedDB can be accessed on https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html and analysed data subset is featured in *Supplementary Dataset 4*.
 ##### Case series of MR and RCT studies with matching exposures (interventions) and outcomes (conditions) is featured in *Supplementary Dataset 4*.
-##### *Supplementary Datasets 1-5* are available for download on Zenodo: 
+##### *Supplementary Datasets 1-5* are available for download on Zenodo: https://doi.org/10.5281/zenodo.8104176
 
 
