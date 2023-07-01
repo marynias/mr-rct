@@ -8,7 +8,8 @@
 ##### [process_tables.R](https://github.com/marynias/mr-rct/blob/master/process_tables.R)
 #### Quantitative and qualitative description of the filtered RCT dataset from ClinicalTrials.Gov
 ##### [clingov_data_explorer.R](https://github.com/marynias/mr-rct/blob/master/clingov_data_explorer.R)
-
+#### Statistical comparison of features of RCTs with results published on ClinicalTrials.Gov relative to all the RCTs in the database
+##### [chi_squared_comparison.R](https://github.com/marynias/mr-rct/blob/master/chi_squared_comparison.R)
 ### Analyses comparing eQTL and pQTL MR results with RCT results
 
 #### Link pQTL MR results with RCT results via drug matching using EpigraphDB
