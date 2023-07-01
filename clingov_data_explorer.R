@@ -26,36 +26,46 @@ plot_histogram(data)
 theme_set(theme_gray()+ theme(axis.line = element_line(size=0.5),panel.background = element_rect(fill=NA,size=rel(20)), panel.grid.minor = element_line(colour = NA), plot.title = element_text(size=16), axis.text = element_text(size=12), axis.title = element_text(size=14), strip.text.x = element_text(size = 16)))
 
 data$title <- "Intervention model"
-intervention <- ggplot(data, aes(intervention_model)) + geom_bar(fill='black', colour="black",  width=0.3) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
+intervention <- ggplot(data, aes(intervention_model)) + geom_bar(fill='black', colour="black",  width=0.3) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) + 
+  scale_y_continuous(breaks=c(0, 3000, 6000, 9000, 12000), labels = scales::comma, expand=c(0,0)) + ylab("Study count")
 ggsave("intervention_model.png", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
 table(data$intervention_model)
 
-
-data$primary_purpose <- factor(data$primary_purpose, levels=rev(c("Treatment", "Prevention", "Supportive Care", "Other","Basic Science", "Health Services Research", "Diagnostic", "Screening" )))
-data$title <- "Primary purpose"
-purpose <- ggplot(data, aes(primary_purpose)) + geom_bar(fill='black', colour="black",  width=0.5) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
+data_temp <- data[!is.na(data$primary_purpose), ]
+data_temp$primary_purpose <- factor(data_temp$primary_purpose, levels=rev(c("Treatment", "Prevention", "Supportive Care", "Other","Basic Science", "Health Services Research", "Diagnostic", "Screening" )))
+data_temp$title <- "Primary purpose"
+data_temp <- data_temp[!is.na(data_temp$primary_purpose), ]
+purpose <- ggplot(data_temp, aes(primary_purpose)) + geom_bar(fill='black', colour="black",  width=0.5) +
+  coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  
+  scale_y_continuous(breaks=c(0,2500,5000,7500,10000), labels = scales::comma, expand=c(0,0)) + ylab("Study count")
 ggsave("primary_purpose.png", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
-table(data$primary_purpose)
+table(data_temp$primary_purpose)
 
-data <- data[!is.na(data$overall_status), ]
-data$overall_status <- factor(data$overall_status, levels=rev(c("Completed", "Terminated", "Active, not recruiting", "Unknown status", "Recruiting")))
+data_temp <- data[!is.na(data$overall_status), ]
+data_temp$overall_status <- factor(data_temp$overall_status, levels=rev(c("Completed", "Terminated", "Active, not recruiting", "Unknown status", "Recruiting")))
 data$title <- "Trial status"
-status <- ggplot(data, aes(overall_status)) + geom_bar(fill='black', colour="black",  width=0.5) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
+status <- ggplot(data_temp, aes(overall_status)) + geom_bar(fill='black', colour="black",  width=0.5) +
+coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  
+  scale_y_continuous(breaks=c(0, 3000, 6000, 9000, 12000), labels = scales::comma, expand=c(0,0)) + ylab("Study count")
 ggsave("trial_status.png", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
-table(data$overall_status)
+table(data_temp$overall_status)
 
 data$gender <- factor(data$gender, levels=rev(c("All", "Female", "Male")))
 data$title <- "Gender"
-gender <- ggplot(data, aes(gender)) + geom_bar(fill='black', colour="black",  width=0.4) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
+gender <- ggplot(data, aes(gender)) + geom_bar(fill='black', colour="black",  width=0.4) +
+coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  
+scale_y_continuous(breaks=c(0, 3000, 6000, 9000, 12000), labels = scales::comma, expand=c(0,0)) + ylab("Study count")
 ggsave("gender.png", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
 table(data$gender)
 
-data <- data[!is.na(data$phase), ]
-data$phase <- factor(data$phase, levels=rev(c("Phase 3", "Phase 2", "N/A", "Phase 4", "Phase 1", "Phase 2/Phase 3", "Phase 1/Phase 2", "Early Phase 1")))
-data$title <- "Trial phase"
-phase <- ggplot(data, aes(phase)) + geom_bar(fill='black', colour="black",  width=0.5) + coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
-ggsave("trial_phase", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
-table(data$phase)
+data_temp <- data[!is.na(data$phase), ]
+data_temp$phase <- factor(data$phase, levels=rev(c("Phase 3", "Phase 2", "Not Applicable", "Phase 4" , "Phase 1", "Phase 2/Phase 3", "Phase 1/Phase 2", "Early Phase 1")))
+data_temp$title <- "Trial phase"
+phase <- ggplot(data_temp, aes(phase)) + geom_bar(fill='black', colour="black",  width=0.5) + 
+coord_flip() + facet_grid(. ~ title) + xlab(element_blank()) +  
+scale_y_continuous(labels = scales::comma, expand=c(0,0)) + ylab("Study count")
+ggsave("trial_phase.png", width=11, height=8, units=c("cm"), dpi=600, limitsize=F)
+table(data_temp$phase)
 
 
 data$title <- "Number of arms"
@@ -66,9 +76,6 @@ summary(data$number_of_arms)
 (intervention | purpose ) / (status | phase) / (gender | number_arms )
 
 ggarrange(intervention, purpose, status, phase, gender, number_arms, ncol = 2, nrow = 3)
-#ggarrange(phase, status, gender, intervention, number_arms, purpose, ncol = 2, nrow = 3)
-#ggarrange(intervention, status, gender, phase, number_arms, purpose, ncol = 2, nrow = 3)
-
 
 #Outcomes table
 outcome <- read.delim("outcome_add.tsv", header=T, stringsAsFactors=F, row.names=NULL, sep="\t", quote="")
@@ -91,11 +98,14 @@ summary(secondary_counts)
 
 #Distribution of p-values
 data_results$p_value <- as.numeric(data_results$p_value)
-pvalues <- ggplot(data_results, aes(p_value)) + geom_histogram(fill='darkblue', colour="black") + scale_x_continuous(limits = c(0, 1)) + scale_y_continuous(limits = c(0, 13000), labels = scales::comma, expand=c(0,0)) + xlab("P-value") + ylab("Result count")
+data_results_plot <- data_results %>% dplyr::filter(p_value <= 1) %>% dplyr::filter( p_value >= 0)
+pvalues <- ggplot(data_results_plot, aes(p_value)) + 
+geom_histogram(fill='darkblue', colour="black") + 
+scale_y_continuous(labels = scales::comma, expand=c(0,0)) + xlab("P-value") + ylab("Result count")
 
 ggtitle("P-value distribution")
 ggsave("p-values.png", width=10, height=8, units=c("cm"), dpi=600, limitsize=F)
-summary(data_results$p_value)
+summary(data_results_plot$p_value)
 
 zeroes <- data_results[data_results$p_value < 0.05,]
 
@@ -132,7 +142,7 @@ count_nas <- function(x,y,z) {
 }
 
 out <- count_nas("Drug", for_interv, data)
-# 1,064 NAs out of 5,527
+# 2,212 NAs out of 11,537
 #No-Results
 out <- count_nas("Drug", for_interv2, published)
 #For how many of the studies with Behavioral intervention, we have a Mesh intervention term mapped?
@@ -215,14 +225,15 @@ study_results_year <- study_ext_results %>% count(year)
 #How many RCTs before 2000
 study_results_year %>% filter(year < 2000) %>% summarise(Total = sum(n)) 
 
-#How many RCTs before 2000
+#How many RCTs before 2012
 study_results_year %>% filter(year < 2012) %>% summarise(Total = sum(n)) 
 
 ##Subsetting to only completed trials.
 study_ext_results_comp$date <- anytime::anydate(study_ext_results_comp$start_date)
 #Remove NAs
 study_ext_results_comp <- study_ext_results_comp[!is.na(study_ext_results_comp$date),]
-median(study_ext_results_comp$date)
+median(year(study_ext_results$date))
+median(year(study_ext_results_comp$date))
 study_ext_all_comp$date <- anytime::anydate(study_ext_all_comp$start_date)
 #Remove NAs
 study_ext_all_comp <- study_ext_all_comp[!is.na(study_ext_all_comp$date),]
