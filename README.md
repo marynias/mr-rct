@@ -29,7 +29,7 @@
 ## Data sources
 ##### ClinicalTrials.Gov data was accessed via AACT: https://aact.ctti-clinicaltrials.org/download and analysed data subset is featured in *Supplementary Datasets 1 & 2*.
 ##### pQTL and eQTL MR analysis results are available via EpigraphDB: https://epigraphdb.org/xqtl 
-##### PubMed database can be accessed on https://pubmed.ncbi.nlm.nih.gov/ and analysed data subset is featured in *Supplementary Dataset 3*.
+##### PubMed database can be accessed on https://pubmed.ncbi.nlm.nih.gov/ and analysed data subset is featured in *Supplementary Dataset 4*.
 ##### SemMedDB can be accessed on https://lhncbc.nlm.nih.gov/ii/tools/SemRep_SemMedDB_SKR/SemMedDB_download.html and analysed data subset is featured in *Supplementary Dataset 4*.
 ##### Case series of MR and RCT studies with matching exposures (interventions) and outcomes (conditions) is featured in *Supplementary Dataset 4*.
 ##### *Supplementary Datasets 1-5* are available for download on Zenodo: 
