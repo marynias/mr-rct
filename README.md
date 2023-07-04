@@ -1,6 +1,6 @@
 ## Python/R scripts for analyses described in "Systematic comparison of Mendelian randomization studies and randomized controlled trials using electronic databases"
 
-#### A Jupyter notebook with basic exploration of data strored within ClinicalTrials.Gov database
+#### A Jupyter notebook with basic exploration of data stored within ClinicalTrials.Gov database
 ##### [explore-rct.ipynb](https://github.com/marynias/mr-rct/blob/master/explore-rct.ipynb)
 #### Extract required tables from ClinicalTrials.Gov
 ##### [extract_filtered_tables.py](https://github.com/marynias/mr-rct/blob/master/extract_filtered_tables.py) 
