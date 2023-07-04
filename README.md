@@ -2,6 +2,9 @@
 
 #### A Jupyter notebook with basic exploration of data stored within ClinicalTrials.Gov database
 ##### [explore-rct.ipynb](https://github.com/marynias/mr-rct/blob/master/explore-rct.ipynb)
+##### *Dependencies*: 
+* pandas
+* psycopg2 
 #### Extract required tables from ClinicalTrials.Gov
 ##### [extract_filtered_tables.py](https://github.com/marynias/mr-rct/blob/master/extract_filtered_tables.py) 
 #### Process (filter, merge) tables from ClinicalTrials.Gov
